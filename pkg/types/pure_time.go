@@ -1,6 +1,8 @@
 package types
 
 import (
+	"database/sql/driver"
+	"errors"
 	"github.com/go-playground/validator/v10"
 
 	"fmt"
@@ -9,6 +11,21 @@ import (
 type PureTime struct {
 	Hour   int `json:"hour" validate:"required,numeric,min=0,max=23"`
 	Minute int `json:"minute" validate:"required,numeric,min=0,max=59"`
+}
+
+func (t *PureTime) Scan(value interface{}) error {
+	str, ok := value.(string)
+	if !ok {
+		return errors.New(fmt.Sprint("Failed to unmarshal time value:", value))
+	}
+	if _, err := fmt.Sscanf(str, `%02d:%02d`, &t.Hour, &t.Minute); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t PureTime) Value() (driver.Value, error) {
+	return t.String(), nil
 }
 
 func (t *PureTime) CalculateWorkHour(endTime *PureTime) *PureTime {

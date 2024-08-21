@@ -1,0 +1,23 @@
+name: timesheet-hexagonal
+
+services:
+  tidb:
+    build:
+      context: ./docker/tidb
+      dockerfile: Dockerfile
+    container_name: tidb
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 4000:4000
+      - 2379:2379
+      - 3000:3000
+    command:
+      - playground
+      - --host=0.0.0.0
+      - v7.5.0
+    networks:
+        - timesheet-hexagonal
+
+networks:
+    timesheet-hexagonal:

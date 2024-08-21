@@ -1,6 +1,8 @@
 package types
 
 import (
+	"database/sql/driver"
+	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 )
@@ -25,6 +27,21 @@ func (d *PureDate) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+func (d *PureDate) Scan(value interface{}) error {
+	str, ok := value.(string)
+	if !ok {
+		return errors.New(fmt.Sprint("Failed to unmarshal date value:", value))
+	}
+	if _, err := fmt.Sscanf(str, `%04d-%02d-%02d`, &d.Year, &d.Month, &d.Day); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d PureDate) Value() (driver.Value, error) {
+	return d.String(), nil
+}
+
 func parseDate(date string, d *PureDate) (PureDate, error) {
 	var year, month, day int
 	if _, err := fmt.Sscanf(date, `"%04d-%02d-%02d"`, &year, &month, &day); err != nil {
@@ -36,10 +53,4 @@ func parseDate(date string, d *PureDate) (PureDate, error) {
 		return PureDate{}, err
 	}
 	return *d, nil
-}
-
-func ParseDate(date string) (PureDate, error) {
-	var d PureDate
-	_, err := parseDate(date, &d)
-	return d, err
 }
